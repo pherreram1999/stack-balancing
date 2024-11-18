@@ -1,7 +1,6 @@
 package main
 
 import (
-	"fmt"
 	"fyne.io/fyne/v2"
 	"fyne.io/fyne/v2/app"
 	"fyne.io/fyne/v2/container"
@@ -12,13 +11,19 @@ import (
 	"os"
 )
 
+type StackSymbolWidget struct {
+	Symbol string
+	Wg     fyne.Widget
+}
+
 var windowParent fyne.Window
 
 var codeTextBindig binding.String
+var appFyne fyne.App
 
 func main() {
-	a := app.New()
-	windowParent = a.NewWindow("Stack Balancing")
+	appFyne = app.NewWithID("stack-balancing")
+	windowParent = appFyne.NewWindow("Stack Balancing")
 
 	codeTextBindig = binding.NewString()
 
@@ -55,10 +60,16 @@ func main() {
 }
 
 func BalancingWindow() {
-	codeText, err := codeTextBindig.Get()
+	/*codeText, err := codeTextBindig.Get()
 	if err != nil {
 		dialog.ShowError(err, windowParent)
-	}
+	}*/
 
-	fmt.Println(codeText)
+	win := appFyne.NewWindow("Stack animation")
+
+	rowContainer := container.New(layout.NewVBoxLayout())
+
+	win.SetContent(rowContainer)
+
+	win.Show()
 }

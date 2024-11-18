@@ -5,8 +5,6 @@ type StackList[T any] struct {
 	Next *StackList[T]
 }
 
-type StackEachFunc func(symbol rune)
-
 func Push[T any](stack **StackList[T], item T) {
 	nuevoNodo := &StackList[T]{
 		Item: item,
