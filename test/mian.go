@@ -8,7 +8,7 @@ import (
 func main() {
 	word := "Hello"
 
-	var pila *stack.StackList
+	var pila *stack.StackList[rune]
 
 	fmt.Println("----- Pushed -----")
 	for _, runa := range word {
@@ -16,7 +16,7 @@ func main() {
 		stack.Push(&pila, runa)
 	}
 	fmt.Println("----- Pop -----")
-	for i := 0; i < len(word)+1; i++ {
+	for i := 0; i < len(word); i++ {
 		s := stack.Pop(&pila)
 		if s == 0 {
 			fmt.Println("Sin nada en la pila")
