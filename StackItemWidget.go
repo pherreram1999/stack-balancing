@@ -1,5 +1,8 @@
 package main
 
-type StackItemWidget struct {
+import "fyne.io/fyne/v2"
+
+type StackItem struct {
 	Symbol rune
+	Widget *fyne.Container
 }

@@ -14,6 +14,14 @@ import (
 	"time"
 )
 
+func NewBoxSymbol(symbol rune) *fyne.Container {
+	SymbolBox := canvas.NewRectangle(color.RGBA{R: 241, G: 245, B: 249, A: 255})
+	SymbolBoxLbl := widget.NewLabel(string(symbol))
+	SymbolBoxLbl.TextStyle.Bold = true
+	SymbolBox.Resize(fyne.NewSize(35, 35))
+	return container.NewWithoutLayout(SymbolBox, SymbolBoxLbl)
+}
+
 func StackWidget(pathBind binding.String) *fyne.Container {
 
 	getFileContent := func() (string, error) {
@@ -42,12 +50,15 @@ func StackWidget(pathBind binding.String) *fyne.Container {
 	inputSymbolLbl := widget.NewLabel("Input")
 	InputSymbolContainer := container.New(layout.NewHBoxLayout(), inputSymbolLbl, SymbolBoxContainer)
 
+	// stack Container
+	stackContainer := container.NewWithoutLayout()
+
 	// symbols
 
 	pushSymbols := balancingSymbols.GetPushSymbols()
 	popSymbols := balancingSymbols.GetPopSymbols()
 
-	stack := &stacklist.StackList[*StackItemWidget]{}
+	stack := &stacklist.StackList[*StackItem]{}
 
 	stackActionBtn := widget.NewButton("Balance Stack", func() {
 		text, err := getFileContent()
@@ -55,10 +66,22 @@ func StackWidget(pathBind binding.String) *fyne.Container {
 			ShowError(err)
 			return
 		}
+
 		for _, char := range text {
 			symbolBind.Set(string(char))
 			if pushSymbols.Is(char) {
-				stacklist.Push(&stack, &StackItemWidget{Symbol: char})
+
+				symbolBox := NewBoxSymbol(char)
+
+				stackContainer.Add(symbolBox)
+
+				stacklist.Push(
+					&stack,
+					&StackItem{
+						Symbol: char,
+						Widget: symbolBox,
+					},
+				)
 			} else if popSymbols.Is(char) {
 				stacklist.Pop(&stack)
 			}
@@ -71,9 +94,8 @@ func StackWidget(pathBind binding.String) *fyne.Container {
 		container.New(
 			layout.NewHBoxLayout(),
 			stackActionBtn,
-		),
-		container.NewWithoutLayout(
 			InputSymbolContainer,
 		),
+		stackContainer,
 	)
 }
