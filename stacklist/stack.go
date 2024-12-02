@@ -5,6 +5,14 @@ type StackList[T any] struct {
 	Next *StackList[T]
 }
 
+func ForEach[T any](stack **StackList[T], callback func(item T)) {
+	nav := *stack
+	for nav != nil {
+		callback(nav.Item)
+		nav = nav.Next
+	}
+}
+
 func Push[T any](stack **StackList[T], item T) {
 	nuevoNodo := &StackList[T]{
 		Item: item,
