@@ -18,8 +18,8 @@ func GetPopSymbols() BalancingSymbol {
 	}
 }
 
-// Valid indica si el simbolo dado se debe o no agregar a la cola
-func (symbols *BalancingSymbol) Valid(symbol rune) bool {
+// Is indica si el simbolo dado se debe o no agregar a la cola
+func (symbols *BalancingSymbol) Is(symbol rune) bool {
 	if _, ok := (*symbols)[symbol]; ok {
 		return true
 	}

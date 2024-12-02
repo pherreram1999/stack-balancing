@@ -1,4 +1,4 @@
-package stack
+package stacklist
 
 type StackList[T any] struct {
 	Item T
