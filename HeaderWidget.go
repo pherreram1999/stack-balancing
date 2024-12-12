@@ -9,9 +9,13 @@ import (
 	"fyne.io/fyne/v2/widget"
 )
 
-func HeaderWidget(pathBind binding.String) *fyne.Container {
+func HeaderWidget(pathBind, counterBind binding.String) *fyne.Container {
 	pathLbl := widget.NewLabel("")
 	pathLbl.Bind(pathBind)
+	counterTitleLbl := widget.NewLabel("Stack Count")
+	counterTitleLbl.TextStyle.Bold = true
+	counterLbl := widget.NewLabel("")
+	counterLbl.Bind(counterBind)
 
 	readFileBtn := widget.NewButton("Select File", func() {
 		dialog.ShowFileOpen(func(reader fyne.URIReadCloser, err error) {
@@ -31,5 +35,7 @@ func HeaderWidget(pathBind binding.String) *fyne.Container {
 		layout.NewHBoxLayout(),
 		readFileBtn,
 		pathLbl,
+		counterTitleLbl,
+		counterLbl,
 	)
 }

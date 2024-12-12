@@ -16,15 +16,16 @@ func main() {
 
 	Window = App.NewWindow("Stack Balancing")
 
-	Window.Resize(fyne.NewSize(1600, 800))
+	Window.Resize(fyne.NewSize(800, 350))
 
-	// binders =
+	// binders
 	pathBind := binding.NewString()
+	counterBind := binding.NewString()
 
 	mainContent := container.New(
 		layout.NewVBoxLayout(),
-		HeaderWidget(pathBind),
-		StackWidget(pathBind),
+		HeaderWidget(pathBind, counterBind),
+		StackWidget(pathBind, counterBind),
 	)
 
 	Window.SetContent(mainContent)
