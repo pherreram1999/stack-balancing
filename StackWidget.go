@@ -1,6 +1,7 @@
 package main
 
 import (
+	"errors"
 	"fmt"
 	"fyne.io/fyne/v2"
 	"fyne.io/fyne/v2/canvas"
@@ -9,8 +10,6 @@ import (
 	"fyne.io/fyne/v2/layout"
 	"fyne.io/fyne/v2/widget"
 	"image/color"
-	"os"
-	"stackbalancing/balancingSymbols"
 	"stackbalancing/stacklist"
 	"time"
 )
@@ -28,25 +27,10 @@ func NewBoxSymbol(symbol rune) *fyne.Container {
 const minTimer float64 = 400
 const topHeigth float32 = 50
 
-func StackWidget(pathBind, counterBind binding.String) *fyne.Container {
+func StackWidget(pathBind, counterBind, entryBind binding.String) *fyne.Container {
 
 	timerBind := binding.NewFloat()
 	timerBind.Set(minTimer)
-
-	getFileContent := func() (string, error) {
-		path, err := pathBind.Get()
-
-		if err != nil {
-			return "", err
-		}
-
-		res, err := os.ReadFile(path)
-		if err != nil {
-			return "", err
-		}
-
-		return string(res), nil
-	}
 
 	// slide timer
 	slideTimer := widget.NewSlider(minTimer, 1000)
@@ -80,9 +64,6 @@ func StackWidget(pathBind, counterBind binding.String) *fyne.Container {
 	stackContainer := container.NewWithoutLayout(pushLbl, popLbl)
 
 	// symbols
-
-	pushSymbols := balancingSymbols.GetPushSymbols()
-	popSymbols := balancingSymbols.GetPopSymbols()
 
 	var stack *stacklist.StackList[*StackItem]
 
@@ -122,9 +103,14 @@ func StackWidget(pathBind, counterBind binding.String) *fyne.Container {
 		stack = nil // limpiamos la pila
 		t, _ := timerBind.Get()
 		duration := time.Millisecond * time.Duration(t)
-		text, err := getFileContent()
+		text, err := entryBind.Get()
 		if err != nil {
 			ShowError(err)
+			return
+		}
+
+		if text[0] != '0' {
+			ShowError(errors.New("La cadena no inicia con 0"))
 			return
 		}
 
@@ -132,7 +118,7 @@ func StackWidget(pathBind, counterBind binding.String) *fyne.Container {
 
 		for _, char := range text {
 			_ = symbolBind.Set(string(char))
-			if pushSymbols.Is(char) {
+			if char == '0' { // push
 				counter++
 				symbolBox := NewBoxSymbol(char)
 				stackContainer.Add(symbolBox)
@@ -155,9 +141,14 @@ func StackWidget(pathBind, counterBind binding.String) *fyne.Container {
 					},
 				)
 				time.Sleep(duration) // esperamos que se termine de animar
-			} else if popSymbols.Is(char) {
+			} else {
 				counter--
 				popItem := stacklist.Pop(&stack)
+				if popItem == nil {
+					ShowInfo("Pila no balanceada", "Se trata de sacar mas elemento de los existentes")
+					clearStack()
+					return
+				}
 				popMove := canvas.NewPositionAnimation(
 					fyne.NewPos(popItem.Xaxis, topHeigth),
 					fyne.NewPos(150, 0),
