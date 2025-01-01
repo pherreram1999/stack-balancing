@@ -46,7 +46,7 @@ func main() {
 	r := rand.New(src)
 	// methods  to entry
 	makeRandomEntryBtn := widget.NewButton("Random Entry", func() {
-		maxLength := r.Intn(maxRand/2) * 2
+		maxLength := r.Intn(maxRand/2) * 2 // recordar que rand da n-1
 		middle := maxLength / 2
 		randEntry := ""
 		for i := 0; i < maxLength; i++ {
