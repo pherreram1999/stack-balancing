@@ -185,8 +185,9 @@ func StackWidget(pathBind, counterBind, entryBind binding.String, entryLen *int)
 			} else {
 				inputSymbol = "ε"
 				counter--
-
-				symbolTop = stack.Item.Symbol // respaldamos simbolo de la cabecera para pintar la transicion
+				if stack != nil {
+					symbolTop = stack.Item.Symbol // respaldamos simbolo de la cabecera para pintar la transicion
+				}
 
 				popItem := stacklist.Pop(&stack)
 
