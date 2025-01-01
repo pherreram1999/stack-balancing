@@ -117,10 +117,15 @@ func StackWidget(pathBind, counterBind, entryBind binding.String, entryLen *int)
 		}
 
 		counter := 0 // lleva el conteo de la pila
-
+		iterationCounter := 0
+		var symbolTop rune // guardamos lo que tenia la pila antes de cambiar para la transicion
+		var nextState string
+		inputSymbol := ""
+		prevState := "q0"
 		for _, char := range text {
 			_ = symbolBind.Set(string(char))
 			if char == '0' { // push
+				inputSymbol = "0"
 				counter++
 				// solo creamos la caja de animacion en el caso de que la longitud de cadena sea menor a LIMIT_ANIMATION
 				var symbolBox *fyne.Container
@@ -140,6 +145,13 @@ func StackWidget(pathBind, counterBind, entryBind binding.String, entryLen *int)
 					moveSymbolBox.Start()
 				}
 
+				// guardamos la cabecera para la transicion
+				if stack == nil {
+					symbolTop = 'Z'
+				} else {
+					symbolTop = stack.Item.Symbol
+				}
+
 				stacklist.Push(
 					&stack,
 					&StackItem{
@@ -147,11 +159,19 @@ func StackWidget(pathBind, counterBind, entryBind binding.String, entryLen *int)
 						Widget: symbolBox,
 					},
 				)
+
+				nextState = "q0" // q0 para cuando se agregan
 				if LimitAnimation <= *entryLen {
 					time.Sleep(duration) // esperamos que se termine de animar
 				}
 			} else {
+				inputSymbol = "ε"
 				counter--
+				if stack == nil {
+					break // sin mas elementos que procesar
+				}
+				symbolTop = stack.Item.Symbol // respaldamos simbolo de la cabecera para pintar la transicion
+				nextState = "q1"              // estado de pop
 				popItem := stacklist.Pop(&stack)
 				if popItem == nil {
 					ShowInfo("Pila no balanceada", "Se trata de sacar mas elemento de los existentes")
@@ -178,7 +198,24 @@ func StackWidget(pathBind, counterBind, entryBind binding.String, entryLen *int)
 			_ = counterBind.Set(fmt.Sprintf("%d", counter))
 			time.Sleep(duration)
 
+			iterationCounter++
+
+			/*
+				if iterationCounter == *entryLen {
+					nextState = "q3"
+					symbolTop = 'Z'
+					inputSymbol = "Z"
+				}
+			*/
+
+			// guardamos la transicion
+			transicion := fmt.Sprintf("&(%s,%s,%s) = (%s,%s)\n", prevState, string(char), string(symbolTop), nextState, inputSymbol)
+			prevState = nextState
+			fmt.Println(transicion)
 		}
+
+		// transicion de aceptacion
+		fmt.Printf("&(q1,ε,Z) = (q2,Z)\n")
 
 		if counter > 0 {
 			ShowInfo("NO balanceado :(", "La pila aun presenta elementos sin más simbolos que procesar")
