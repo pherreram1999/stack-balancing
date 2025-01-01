@@ -116,8 +116,7 @@ func StackWidget(pathBind, counterBind, entryBind binding.String, entryLen *int)
 			return
 		}
 
-		counter := 0 // lleva el conteo de la pila
-		iterationCounter := 0
+		counter := 0       // lleva el conteo de la pila
 		var symbolTop rune // guardamos lo que tenia la pila antes de cambiar para la transicion
 		var nextState string
 		inputSymbol := ""
@@ -167,17 +166,17 @@ func StackWidget(pathBind, counterBind, entryBind binding.String, entryLen *int)
 			} else {
 				inputSymbol = "ε"
 				counter--
-				if stack == nil {
-					break // sin mas elementos que procesar
-				}
-				symbolTop = stack.Item.Symbol // respaldamos simbolo de la cabecera para pintar la transicion
-				nextState = "q1"              // estado de pop
+
 				popItem := stacklist.Pop(&stack)
+
 				if popItem == nil {
 					ShowInfo("Pila no balanceada", "Se trata de sacar mas elemento de los existentes")
 					clearStack()
 					return
 				}
+
+				symbolTop = stack.Item.Symbol // respaldamos simbolo de la cabecera para pintar la transicion
+				nextState = "q1"              // estado de pop
 
 				if *entryLen <= LimitAnimation {
 					popMove := canvas.NewPositionAnimation(
@@ -198,24 +197,14 @@ func StackWidget(pathBind, counterBind, entryBind binding.String, entryLen *int)
 			_ = counterBind.Set(fmt.Sprintf("%d", counter))
 			time.Sleep(duration)
 
-			iterationCounter++
-
-			/*
-				if iterationCounter == *entryLen {
-					nextState = "q3"
-					symbolTop = 'Z'
-					inputSymbol = "Z"
-				}
-			*/
-
 			// guardamos la transicion
-			transicion := fmt.Sprintf("&(%s,%s,%s) = (%s,%s)\n", prevState, string(char), string(symbolTop), nextState, inputSymbol)
+			transicion := fmt.Sprintf("&(%s,%s,%s) = (%s,%s)", prevState, string(char), string(symbolTop), nextState, inputSymbol)
 			prevState = nextState
 			fmt.Println(transicion)
 		}
 
 		// transicion de aceptacion
-		fmt.Printf("&(q1,ε,Z) = (q2,Z)\n")
+		fmt.Printf("&(q1,ε,Z) = (q2,Z)")
 
 		if counter > 0 {
 			ShowInfo("NO balanceado :(", "La pila aun presenta elementos sin más simbolos que procesar")
