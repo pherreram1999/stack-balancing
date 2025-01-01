@@ -15,6 +15,7 @@ import (
 )
 
 const boxSize = 40
+const LimitAnimation = 10
 
 func NewBoxSymbol(symbol rune) *fyne.Container {
 	SymbolBox := canvas.NewRectangle(color.RGBA{R: 241, G: 245, B: 249, A: 255})
@@ -27,7 +28,7 @@ func NewBoxSymbol(symbol rune) *fyne.Container {
 const minTimer float64 = 400
 const topHeigth float32 = 50
 
-func StackWidget(pathBind, counterBind, entryBind binding.String) *fyne.Container {
+func StackWidget(pathBind, counterBind, entryBind binding.String, entryLen *int) *fyne.Container {
 
 	timerBind := binding.NewFloat()
 	timerBind.Set(minTimer)
@@ -94,6 +95,7 @@ func StackWidget(pathBind, counterBind, entryBind binding.String) *fyne.Containe
 	clearStack := func() {
 		for stack != nil {
 			stack.Item.Widget.Hide()
+			stack.Item.Widget = nil // a la basura
 			stack = stack.Next
 		}
 	}
@@ -120,19 +122,24 @@ func StackWidget(pathBind, counterBind, entryBind binding.String) *fyne.Containe
 			_ = symbolBind.Set(string(char))
 			if char == '0' { // push
 				counter++
-				symbolBox := NewBoxSymbol(char)
-				stackContainer.Add(symbolBox)
-				symbolBox.Move(fyne.NewPos(50, 0))
-				moveStack(boxSize)
-				time.Sleep(duration) // esperar y desplazamos
-				// movemos nuestra nuestro simbolo de entrada a la posicion del stack
-				moveSymbolBox := canvas.NewPositionAnimation(
-					fyne.NewPos(50, 0),
-					fyne.NewPos(0, topHeigth),
-					duration,
-					symbolBox.Move,
-				)
-				moveSymbolBox.Start()
+				// solo creamos la caja de animacion en el caso de que la longitud de cadena sea menor a LIMIT_ANIMATION
+				var symbolBox *fyne.Container
+				if *entryLen <= LimitAnimation {
+					symbolBox = NewBoxSymbol(char)
+					stackContainer.Add(symbolBox)
+					symbolBox.Move(fyne.NewPos(50, 0))
+					moveStack(boxSize)
+					time.Sleep(duration) // esperar y desplazamos
+					// movemos nuestra nuestro simbolo de entrada a la posicion del stack
+					moveSymbolBox := canvas.NewPositionAnimation(
+						fyne.NewPos(50, 0),
+						fyne.NewPos(0, topHeigth),
+						duration,
+						symbolBox.Move,
+					)
+					moveSymbolBox.Start()
+				}
+
 				stacklist.Push(
 					&stack,
 					&StackItem{
@@ -140,7 +147,9 @@ func StackWidget(pathBind, counterBind, entryBind binding.String) *fyne.Containe
 						Widget: symbolBox,
 					},
 				)
-				time.Sleep(duration) // esperamos que se termine de animar
+				if LimitAnimation <= *entryLen {
+					time.Sleep(duration) // esperamos que se termine de animar
+				}
 			} else {
 				counter--
 				popItem := stacklist.Pop(&stack)
@@ -149,18 +158,21 @@ func StackWidget(pathBind, counterBind, entryBind binding.String) *fyne.Containe
 					clearStack()
 					return
 				}
-				popMove := canvas.NewPositionAnimation(
-					fyne.NewPos(popItem.Xaxis, topHeigth),
-					fyne.NewPos(150, 0),
-					duration,
-					popItem.Widget.Move,
-				)
-				popMove.Start()
-				time.Sleep(duration * 2) // esperamos la animacion
-				// una vez que termine lo quitamos
-				popItem.Widget.Hide()
-				popItem = nil // para que lo recoja el colector
-				moveStack(-boxSize)
+
+				if *entryLen <= LimitAnimation {
+					popMove := canvas.NewPositionAnimation(
+						fyne.NewPos(popItem.Xaxis, topHeigth),
+						fyne.NewPos(150, 0),
+						duration,
+						popItem.Widget.Move,
+					)
+					popMove.Start()
+					time.Sleep(duration * 2) // esperamos la animacion
+					// una vez que termine lo quitamos
+					popItem.Widget.Hide()
+					popItem = nil // para que lo recoja el colector
+					moveStack(-boxSize)
+				}
 
 			}
 			_ = counterBind.Set(fmt.Sprintf("%d", counter))

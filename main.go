@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"fyne.io/fyne/v2"
 	"fyne.io/fyne/v2/app"
 	"fyne.io/fyne/v2/container"
@@ -27,10 +28,18 @@ func main() {
 	// binders
 	pathBind := binding.NewString()
 	counterBind := binding.NewString()
+	entryLenBind := binding.NewString()
 
 	entryBind := binding.NewString()
 	entryInput := widget.NewEntry()
 	entryInput.Bind(entryBind)
+	entryLen := 0
+	entryInput.OnChanged = func(s string) {
+		entryLen = len(s)
+		_ = entryLenBind.Set(fmt.Sprintf("%d", entryLen))
+	}
+	entryLenLbl := widget.NewLabel("")
+	entryLenLbl.Bind(entryLenBind)
 
 	// semilla randmon
 	src := rand.NewSource(time.Now().Unix())
@@ -55,9 +64,11 @@ func main() {
 		container.New(
 			layout.NewHBoxLayout(),
 			makeRandomEntryBtn,
+			widget.NewLabel("Entry Len"),
+			entryLenLbl,
 		),
 		HeaderWidget(pathBind, counterBind),
-		StackWidget(pathBind, counterBind, entryBind),
+		StackWidget(pathBind, counterBind, entryBind, &entryLen),
 	)
 
 	Window.SetContent(mainContent)
