@@ -72,6 +72,5 @@ func main() {
 	)
 
 	Window.SetContent(mainContent)
-
 	Window.ShowAndRun()
 }

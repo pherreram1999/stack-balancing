@@ -10,6 +10,7 @@ import (
 	"fyne.io/fyne/v2/layout"
 	"fyne.io/fyne/v2/widget"
 	"image/color"
+	"os"
 	"stackbalancing/stacklist"
 	"time"
 )
@@ -121,6 +122,25 @@ func StackWidget(pathBind, counterBind, entryBind binding.String, entryLen *int)
 		var nextState string
 		inputSymbol := ""
 		prevState := "q0"
+
+		// creamos un archivo donde se van a guardar la transiciones
+		_ = os.Remove("transitions.txt")
+		transitionsFile, err := os.Create("transitions.txt")
+		if err != nil {
+			ShowError(err)
+			return
+		}
+		defer transitionsFile.Close()
+
+		// creamos una ventana para ir pintando las transicionnes
+
+		transitionsWindow := App.NewWindow("Transitions")
+		transitionsWindow.Resize(fyne.NewSize(400, 600))
+		transitionsWindow.SetFixedSize(true)
+		transitionContent := container.New(layout.NewVBoxLayout())
+		transitionsWindow.SetContent(container.NewScroll(transitionContent))
+		transitionsWindow.Show()
+
 		for _, char := range text {
 			_ = symbolBind.Set(string(char))
 			if char == '0' { // push
@@ -143,7 +163,6 @@ func StackWidget(pathBind, counterBind, entryBind binding.String, entryLen *int)
 					)
 					moveSymbolBox.Start()
 				}
-
 				// guardamos la cabecera para la transicion
 				if stack == nil {
 					symbolTop = 'Z'
@@ -160,12 +179,14 @@ func StackWidget(pathBind, counterBind, entryBind binding.String, entryLen *int)
 				)
 
 				nextState = "q0" // q0 para cuando se agregan
-				if LimitAnimation <= *entryLen {
+				if *entryLen <= LimitAnimation {
 					time.Sleep(duration) // esperamos que se termine de animar
 				}
 			} else {
 				inputSymbol = "ε"
 				counter--
+
+				symbolTop = stack.Item.Symbol // respaldamos simbolo de la cabecera para pintar la transicion
 
 				popItem := stacklist.Pop(&stack)
 
@@ -175,8 +196,7 @@ func StackWidget(pathBind, counterBind, entryBind binding.String, entryLen *int)
 					return
 				}
 
-				symbolTop = stack.Item.Symbol // respaldamos simbolo de la cabecera para pintar la transicion
-				nextState = "q1"              // estado de pop
+				nextState = "q1" // estado de pop
 
 				if *entryLen <= LimitAnimation {
 					popMove := canvas.NewPositionAnimation(
@@ -191,20 +211,30 @@ func StackWidget(pathBind, counterBind, entryBind binding.String, entryLen *int)
 					popItem.Widget.Hide()
 					popItem = nil // para que lo recoja el colector
 					moveStack(-boxSize)
-				}
+					time.Sleep(duration)
 
+				}
 			}
 			_ = counterBind.Set(fmt.Sprintf("%d", counter))
-			time.Sleep(duration)
 
 			// guardamos la transicion
-			transicion := fmt.Sprintf("&(%s,%s,%s) = (%s,%s)", prevState, string(char), string(symbolTop), nextState, inputSymbol)
+			transition := fmt.Sprintf(
+				"&(%s,%s,%s) = (%s,%s)",
+				prevState,
+				string(char),
+				string(symbolTop),
+				nextState,
+				inputSymbol,
+			)
+			_, _ = fmt.Fprint(transitionsFile, transition+"\n")
 			prevState = nextState
-			fmt.Println(transicion)
+			transitionContent.Add(widget.NewLabel(transition))
+			transitionContent.Refresh()
 		}
 
 		// transicion de aceptacion
-		fmt.Printf("&(q1,ε,Z) = (q2,Z)")
+		_, _ = fmt.Fprintf(transitionsFile, "&(q1,ε,Z) = (q2,Z)")
+		transitionContent.Add(widget.NewLabel("&(q1,ε,Z) = (q2,Z)"))
 
 		if counter > 0 {
 			ShowInfo("NO balanceado :(", "La pila aun presenta elementos sin más simbolos que procesar")
